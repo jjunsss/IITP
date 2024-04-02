@@ -174,28 +174,9 @@ def model_eval(model, tokenizer, image_path, prompt):
     with torch.cuda.amp.autocast(): 
         response, _ = model.chat(tokenizer, query=text, image=image, history=[], do_sample=False) 
         
-    # image_list = [image_path]
-    # images = [Image.open(_).convert("RGB") for _ in image_list]
-    # prompts = [construct_input_prompt(prompt)]
-
-    # inputs = processor(text=prompts, images=images)
-    # inputs = {k: v.bfloat16() if v.dtype == torch.float else v for k, v in inputs.items()}
-    # inputs = {k: v.to(model.device) for k, v in inputs.items()}
-    # # generate_kwargs = {
-    #     'do_sample': True,
-    #     'top_k': 5,
-    #     'max_length': 512
-    #         }
-    # with torch.no_grad():
-    #     res = model.generate(**inputs, **generate_kwargs)
-    #     sentence = tokenizer.batch_decode(res, skip_special_tokens=True)    
-
     return response
 
 def model_loader():
-    # vlm_model = AutoModel.from_pretrained('internlm/internlm-xcomposer2-vl-7b', trust_remote_code=True).to(f"cuda:{du.get_rank()}").eval()
-    # vlm_tokenizer = AutoTokenizer.from_pretrained('internlm/internlm-xcomposer2-vl-7b', trust_remote_code=True)
-    
     vlm_model = InternLMXComposer2QForCausalLM.from_quantized('internlm/internlm-xcomposer2-vl-7b-4bit', trust_remote_code=True, device=f"cuda:{du.get_rank()}").eval()
     vlm_tokenizer = AutoTokenizer.from_pretrained('internlm/internlm-xcomposer2-vl-7b-4bit', trust_remote_code=True)
     return vlm_model, vlm_tokenizer
@@ -274,6 +255,7 @@ def main():
                 deleted_images += 1
             else :
                 generated_images += 1
+                print(f"{rare} dataste generated images : {generated_images}")
             
 
     if du.get_world_size()>2: dist.barrier()
